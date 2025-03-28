@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "lint": "eslint src --ext .ts,.tsx",
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,html,json}\"",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/vite": "^4.0.12",
     "axios": "^1.8.2",
+    "client": "file:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
