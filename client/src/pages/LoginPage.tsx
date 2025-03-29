@@ -2,11 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCard from "../components/AuthCard";
 import { loginUser } from "../services/authService";
+import { useAuth } from "../hooks/useAuth";
+
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -22,6 +26,7 @@ const LoginPage: React.FC = () => {
       setError(result.error);
     } else {
       setError(null);
+      login(result.token, { userId: result.userId, isAdmin: result.isAdmin });
       navigate("/");
     }
   };
@@ -34,7 +39,7 @@ const LoginPage: React.FC = () => {
             {error}
           </div>
         )}
-        
+
         <div>
           <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Your email
