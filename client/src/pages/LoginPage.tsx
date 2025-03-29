@@ -1,23 +1,40 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthCard from "../components/AuthCard";
+import { loginUser } from "../services/authService";
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login data:", formData);
-    // TODO: authService.login()
+
+    const result = await loginUser(formData);
+
+    if ("error" in result) {
+      setError(result.error);
+    } else {
+      setError(null);
+      navigate("/");
+    }
   };
 
   return (
     <AuthCard heading="Sign in to your account">
       <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="text-sm text-red-600 bg-red-100 p-2 rounded">
+            {error}
+          </div>
+        )}
+        
         <div>
           <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Your email

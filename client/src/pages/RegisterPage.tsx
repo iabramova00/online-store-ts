@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthCard from "../components/AuthCard";
+import { registerUser } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,9 @@ const RegisterPage: React.FC = () => {
     acceptedTerms: false,
   });
 
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
     setFormData((prev) => ({
@@ -18,15 +23,36 @@ const RegisterPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Register data:", formData);
-    // TODO: authService.register()
+
+    if (!formData.acceptedTerms) {
+      setError("You must accept the Terms and Conditions.");
+      return;
+    }
+
+    const result = await registerUser({
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+    });
+
+    if ("error" in result) {
+      setError(result.error);
+    } else {
+      setError(null);
+      navigate("/login");
+    }
   };
 
   return (
     <AuthCard heading="Create an account">
       <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="text-sm text-red-600 bg-red-100 p-2 rounded">
+            {error}
+          </div>
+        )}
         <div>
           <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Your email
