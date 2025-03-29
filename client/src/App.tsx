@@ -1,7 +1,17 @@
-export default function App() {
+import { Routes, Route } from "react-router-dom";
+import AuthLayout from "./layouts/AuthLayout";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+
+function App() {
   return (
-    <div className="bg-blue-500 text-white text-2xl p-4 rounded-lg">
-      ✅ Tailwind is working!
-    </div>
+    <Routes>
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
+    </Routes>
   );
 }
+
+export default App;
