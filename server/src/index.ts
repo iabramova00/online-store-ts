@@ -1,27 +1,21 @@
-// src/index.ts
-import 'dotenv/config';
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import connectDB from './config/db';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import authRoutes from "./routes/authRoutes";
 
-console.log("🚀 Starting server...");
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-connectDB();
+mongoose
+  .connect(process.env.MONGO_URI!)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB error:", err));
 
-app.use((req, res, next) => {
-    console.log(`Request received: ${req.method} ${req.url}`);
-    next();
-  });  
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('✅ Server is running with TypeScript!');
-});
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
