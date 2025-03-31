@@ -39,9 +39,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     res.status(201).json({ token, userId: user._id, isAdmin: user.isAdmin });
-  } catch (err) {
-    console.error("Register Error:", err);
-    res.status(500).json({ error: "Registration failed. Try again later." });
+  } catch (err: any) {
+    console.error("Registration failed:", err); // 🔍 Show exact cause in backend logs
+    res.status(500).json({ error: "Registration failed" });
   }
 };
 
