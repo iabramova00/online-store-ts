@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
 import AuthLayout from "./layouts/AuthLayout";
 import Layout from "./layouts/Layout";
 import LoginPage from "./pages/LoginPage";
@@ -8,8 +7,6 @@ import HomePage from "./pages/HomePage";
 
 function App() {
   return (
-    <>
-      <Navbar />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
@@ -20,7 +17,6 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
         </Route>
       </Routes>
-    </>
   );
 }
 
