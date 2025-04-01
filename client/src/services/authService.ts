@@ -50,11 +50,6 @@ export async function registerUser(data: {
   
 }
 
-export function logoutUser() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-}
-
 export function getToken(): string | null {
   return localStorage.getItem("token");
 }
