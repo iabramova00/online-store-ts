@@ -16,6 +16,13 @@ const Navbar: React.FC = () => {
         <nav className="space-x-6 text-base font-medium text-gray-700 dark:text-gray-200">
           <Link to="/products">Products</Link>
 
+          {user?.isAdmin && (
+            <>
+              <Link to="/admin">Dashboard</Link>
+              <Link to="/admin/books">Manage Books</Link>
+            </>
+          )}
+
           {user ? (
             <button onClick={logout} className="text-red-500 hover:underline">
               Logout

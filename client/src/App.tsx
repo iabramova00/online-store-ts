@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProductsPage from "./pages/ProductsPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminBookManager from "./pages/AdminBookManager";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +29,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/books"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminBookManager />
               </ProtectedRoute>
             }
           />
