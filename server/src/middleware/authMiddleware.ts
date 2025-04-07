@@ -10,6 +10,14 @@ export interface AuthRequest extends Request {
   };
 }
 
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (!req.user?.isAdmin) {
+    res.status(403).json({ error: "Admin access required." });
+    return;
+  }
+  next();
+};
+
 export const protect = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 

@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes";
+import bookRoutes from "./routes/bookRoutes";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ mongoose
   .catch((err) => console.error("MongoDB error:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/books", bookRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
