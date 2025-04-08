@@ -11,6 +11,26 @@ export const getAllBooks = async (_req: Request, res: Response): Promise<void> =
   }
 };
 
+// GET /books/categories
+export const getBookCategories = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const categories = await Book.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    res.status(200).json(categories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ error: "Failed to get categories." });
+  }
+};
+
 // GET /books/:id
 export const getBook = async (req: Request, res: Response): Promise<void> => {
   try {

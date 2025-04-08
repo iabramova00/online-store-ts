@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllBooks,
+  getBookCategories,
   getBook,
   createBook,
   updateBook,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllBooks);
+router.get("/categories", getBookCategories);
 router.get("/:id", getBook);
 
 // Admin-only routes (requires authentication + admin check)
