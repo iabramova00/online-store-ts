@@ -2,9 +2,20 @@ import Book from "../models/Book";
 import { Request, Response } from "express";
 
 // GET /books
-export const getAllBooks = async (_req: Request, res: Response): Promise<void> => {
+export const getAllBooks = async (req: Request, res: Response): Promise<void> => {
   try {
-    const books = await Book.find();
+    const search = req.query.search as string;
+
+    const query = search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { author: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const books = await Book.find(query);
     res.status(200).json(books);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch books." });
