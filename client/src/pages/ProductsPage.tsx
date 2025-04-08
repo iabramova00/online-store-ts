@@ -15,9 +15,11 @@ const ProductsPage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedTag, setSelectedTag] = useState("All");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState("All");
 
   const tags = ["All", "Bestseller", "Trending", "New Release"];
 
@@ -35,6 +37,11 @@ const ProductsPage: React.FC = () => {
     "Comics, Manga & Graphic Novels",
   ];
 
+  // Reset page to 1 on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory, selectedTag]);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -48,6 +55,8 @@ const ProductsPage: React.FC = () => {
           if (searchTerm) url.searchParams.append("search", searchTerm);
           if (selectedCategory !== "All") url.searchParams.append("category", selectedCategory);
           if (selectedTag !== "All") url.searchParams.append("tag", selectedTag);
+          url.searchParams.append("page", page.toString());
+          url.searchParams.append("limit", "10");
 
           const res = await fetch(url.toString(), {
             headers: {
@@ -59,31 +68,58 @@ const ProductsPage: React.FC = () => {
           if (!res.ok) throw new Error("Failed to fetch books");
 
           const data = await res.json();
+          setBooks(data.books);
+          setPages(data.pages);
 
-          if (data.length === 0) {
+          if (data.books.length === 0) {
             setError("No books found.");
           } else {
             setError(null);
           }
-
-          setBooks(data);
         } catch (err: unknown) {
           if (err instanceof Error && err.name !== "AbortError") {
             setError(err.message);
           }
         } finally {
-          setTimeout(() => setLoading(false), 150); // Smooth fade
+          setTimeout(() => setLoading(false), 150); // smooth fade
         }
       };
 
       fetchBooks();
-    }, 300); // debounce
+    }, 300);
 
     return () => {
       clearTimeout(delayDebounce);
       controller.abort();
     };
-  }, [token, searchTerm, selectedCategory, selectedTag]);
+  }, [token, searchTerm, selectedCategory, selectedTag, page]);
+
+  const getPaginationRange = () => {
+    const totalPageNumbers = 9;
+    const siblingCount = 1;
+  
+    const range = (start: number, end: number): number[] =>
+      Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  
+    if (pages <= totalPageNumbers) return range(1, pages);
+  
+    const leftSiblingIndex = Math.max(page - siblingCount, 2);
+    const rightSiblingIndex = Math.min(page + siblingCount, pages - 1);
+  
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < pages - 1;
+  
+    const middleRange = range(leftSiblingIndex, rightSiblingIndex);
+  
+    const pagination: (number | "...")[] = [1];
+  
+    if (shouldShowLeftDots) pagination.push("...");
+    pagination.push(...middleRange);
+    if (shouldShowRightDots) pagination.push("...");
+    pagination.push(pages);
+  
+    return pagination;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -96,61 +132,72 @@ const ProductsPage: React.FC = () => {
         <p className="text-center text-gray-500">No books available.</p>
       )}
 
-      <div className="flex gap-8">
-        {/* SIDEBAR */}
-        <aside className="w-64 sticky top-24 h-fit bg-accent/10 p-4 rounded-xl shadow-sm">
-          <h2 className="text-lg font-bold text-accent mb-4">Filter by Category</h2>
-          <ul className="space-y-2">
-            {categories.map((cat) => (
-              <li key={cat}>
-                <button
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`w-full text-left px-3 py-2 rounded-md transition font-medium ${selectedCategory === cat
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <aside className="w-64 bg-primary/5 p-4 rounded-xl space-y-6 sticky top-24 self-start h-fit">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => {
+              setPage(1);
+              setSearchTerm(e.target.value);
+            }}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+
+          {/* Category Filter */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-primary">Category</h3>
+            <ul className="space-y-1 text-sm">
+              {categories.map((cat) => (
+                <li
+                  key={cat}
+                  onClick={() => {
+                    setPage(1);
+                    setSelectedCategory(cat);
+                  }}
+                  className={`cursor-pointer px-2 py-1 rounded-md ${selectedCategory === cat
                       ? "bg-accent text-white"
-                      : "hover:bg-accent/20 text-accent"
+                      : "hover:bg-gray-100"
                     }`}
                 >
                   {cat}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <div className="flex-1">
-          <div className="max-w-md mb-6">
-            <input
-              type="text"
-              placeholder="Search by title or author..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent transition"
-            />
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-accent mb-2">Filter by Tag</h2>
-            <div className="flex flex-wrap gap-2">
+          {/* Tag Filter */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-primary">Tag</h3>
+            <ul className="flex flex-wrap gap-2 text-sm">
               {tags.map((tag) => (
-                <button
+                <li
                   key={tag}
-                  onClick={() => setSelectedTag(tag)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedTag === tag
-                      ? "bg-accent text-white border-accent"
-                      : "border-accent/30 text-accent hover:bg-accent/10"
+                  onClick={() => {
+                    setPage(1);
+                    setSelectedTag(tag);
+                  }}
+                  className={`cursor-pointer px-3 py-1 rounded-full border ${selectedTag === tag
+                      ? "bg-accent text-white"
+                      : "hover:bg-gray-100"
                     }`}
                 >
                   {tag}
-                </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
+        </aside>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {/* Product Grid */}
+        <main className="flex-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-10">
             {books.map((book) => (
               <Link to={`/product/${book._id}`} key={book._id}>
-                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col">
+                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full">
                   <div className="w-full h-80 flex items-center justify-center overflow-hidden">
                     <img
                       src={book.image}
@@ -160,7 +207,7 @@ const ProductsPage: React.FC = () => {
                   </div>
                   <div className="flex flex-col justify-between flex-1 p-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900 leading-snug mb-2 line-clamp-2 h-[3em]">
+                      <h3 className="text-xl font-semibold text-gray-900 leading-snug mb-2 line-clamp-2">
                         {book.title}
                       </h3>
                       <p className="text-base text-gray-600 mb-3 line-clamp-1">
@@ -175,7 +222,45 @@ const ProductsPage: React.FC = () => {
               </Link>
             ))}
           </div>
-        </div>
+
+          {/* Pagination */}
+          {pages > 1 && (
+            <div className="flex flex-wrap items-center justify-center mt-10 gap-2">
+              <button
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+                disabled={page === 1}
+              >
+                Prev
+              </button>
+
+              {getPaginationRange().map((p, idx) =>
+                p === "..." ? (
+                  <span key={`dots-${idx}`} className="px-3 py-1 text-gray-400">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`px-3 py-1 border rounded ${page === p ? "bg-accent text-white" : "hover:bg-gray-100"
+                      }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                onClick={() => setPage((prev) => Math.min(prev + 1, pages))}
+                className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+                disabled={page === pages}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

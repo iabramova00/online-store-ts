@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 // GET /books
 export const getAllBooks = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { search, category } = req.query;
+    const { search, category, tag, page = "1", limit = "10" } = req.query;
 
     const query: any = {};
 
@@ -19,12 +19,23 @@ export const getAllBooks = async (req: Request, res: Response): Promise<void> =>
       query.category = category;
     }
 
-    if (req.query.tag && req.query.tag !== "All") {
-      query.tag = req.query.tag;
+    if (tag && tag !== "All") {
+      query.tag = tag;
     }
 
-    const books = await Book.find(query);
-    res.status(200).json(books);
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const totalBooks = await Book.countDocuments(query);
+    const books = await Book.find(query).skip(skip).limit(limitNumber);
+
+    res.status(200).json({
+      books,
+      total: totalBooks,
+      page: pageNumber,
+      pages: Math.ceil(totalBooks / limitNumber),
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch books." });
   }
