@@ -9,6 +9,7 @@
     "acorn-walk": "^8.3.4",
     "arg": "^4.1.3",
     "array-flatten": "^1.1.1",
+    "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "bson": "^6.10.3",
@@ -104,6 +105,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "seed-books": "ts-node src/scripts/fetchGoogleBooks.ts",
+    "delete-unknown-authors": "ts-node src/scripts/deleteUnknownAuthors.ts",
+    "cleanup-old": "ts-node src/scripts/cleanupOldBooks.ts",
     "start": "node dist/index.js",
     "build": "tsc"
   },
