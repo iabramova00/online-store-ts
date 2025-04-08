@@ -4,16 +4,24 @@ import { Request, Response } from "express";
 // GET /books
 export const getAllBooks = async (req: Request, res: Response): Promise<void> => {
   try {
-    const search = req.query.search as string;
+    const { search, category } = req.query;
 
-    const query = search
-      ? {
-          $or: [
-            { title: { $regex: search, $options: "i" } },
-            { author: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
+    const query: any = {};
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { author: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (category && category !== "All") {
+      query.category = category;
+    }
+
+    if (req.query.tag && req.query.tag !== "All") {
+      query.tag = req.query.tag;
+    }
 
     const books = await Book.find(query);
     res.status(200).json(books);
