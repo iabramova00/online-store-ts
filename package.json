@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.1",
+    "@heroicons/react": "^2.2.0",
+    "framer-motion": "^12.6.3"
+  }
+}
