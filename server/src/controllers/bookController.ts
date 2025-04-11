@@ -1,6 +1,8 @@
 import Book from "../models/Book";
 import { Request, Response } from "express";
 import { SortOrder } from "mongoose";
+import { AuthRequest } from "../middleware/authMiddleware";
+
 
 // GET /books
 export const getAllBooks = async (
@@ -223,3 +225,86 @@ export const deleteBook = async (
     res.status(400).json({ error: "Invalid book ID." });
   }
 };
+
+export const createBookReview = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const { rating, comment } = req.body;
+  const bookId = req.params.id;
+
+  try {
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({ error: "Book not found." });
+      return;
+    }
+
+    const alreadyReviewed = book.reviews.find(
+      (rev) => rev.user.toString() === req.user?.userId
+    );
+
+    if (alreadyReviewed) {
+      res.status(400).json({ error: "You have already reviewed this book." });
+      return;
+    }
+
+    const review = {
+      user: req.user!.userId,
+      name: req.user!.email.split("@")[0],
+      rating: Number(rating),
+      comment,
+    };
+
+    book.reviews.push(review);
+    book.numReviews = book.reviews.length;
+    book.averageRating =
+      book.reviews.reduce((acc, r) => acc + r.rating, 0) / book.numReviews;
+
+    await book.save();
+    res.status(201).json({ message: "Review added successfully." });
+  } catch (err) {
+    console.error("Error creating review:", err);
+    res.status(500).json({ error: "Failed to add review." });
+  }
+};
+
+// DELETE /books/:id/reviews
+export const deleteBookReview = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const bookId = req.params.id;
+
+  try {
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({ error: "Book not found." });
+      return;
+    }
+
+    const originalLength = book.reviews.length;
+
+    // ✅ This is the Mongoose-safe way
+    book.reviews.pull({ user: req.user?.userId });
+
+    if (book.reviews.length === originalLength) {
+      res.status(404).json({ error: "Review not found or already deleted." });
+      return;
+    }
+
+    // Update rating stats
+    book.numReviews = book.reviews.length;
+    book.averageRating =
+      book.reviews.reduce((acc, r: any) => acc + r.rating, 0) /
+      (book.reviews.length || 1);
+
+    await book.save();
+    res.status(200).json({ message: "Review deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting review:", err);
+    res.status(500).json({ error: "Failed to delete review." });
+  }
+};
+
+

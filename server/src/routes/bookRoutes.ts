@@ -6,8 +6,10 @@ import {
   createBook,
   updateBook,
   deleteBook,
+  createBookReview,
+  deleteBookReview
 } from "../controllers/bookController";
-import { protect, requireAdmin } from "../middleware/authMiddleware"; // ✅ Corrected import
+import { protect, requireAdmin } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
@@ -16,7 +18,11 @@ router.get("/", getAllBooks);
 router.get("/categories", getBookCategories);
 router.get("/:id", getBook);
 
-// Admin-only routes (requires authentication + admin check)
+// 🔐 Review routes (logged-in users only)
+router.post("/:id/reviews", protect, createBookReview);
+router.delete("/:id/reviews", protect, deleteBookReview);
+
+// 🔐 Admin-only routes
 router.post("/", protect, requireAdmin, createBook);
 router.put("/:id", protect, requireAdmin, updateBook);
 router.delete("/:id", protect, requireAdmin, deleteBook);
