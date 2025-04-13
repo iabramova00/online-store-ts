@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCard from "../components/AuthCard";
 import InputField from "../components/InputField";
-import { registerUser } from "../services/authService";
+import { registerUser } from "../services/authService"; // Keep this import
+// Remove useAuth if it was imported
+// import { useAuth } from "../hooks/useAuth";
+import { useDispatch } from "react-redux"; // Import useDispatch
+import { setUser } from "../store/userSlice"; // Import setUser action
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +18,7 @@ const RegisterPage: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Get the dispatch function
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
@@ -25,13 +30,51 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await registerUser(formData);
+    setError(null); // Clear previous errors
 
-    if ("error" in result) {
-      setError(result.error);
-    } else {
-      setError(null);
-      navigate("/login");
+    // Basic client-side validation (optional but recommended)
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!formData.acceptedTerms) {
+      setError("You must accept the terms and conditions.");
+      return;
+    }
+
+    try {
+      // Call the registerUser service function
+      const result = await registerUser({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        // acceptedTerms is usually only needed for client-side validation,
+        // unless your backend specifically requires it.
+      });
+
+      if ("error" in result) {
+        // Handle registration error from backend
+        setError(result.error);
+      } else {
+        // Registration successful, dispatch setUser action
+        const { token, userId, isAdmin } = result;
+        console.log("✅ Registration successful, dispatching setUser:", { token, userId, isAdmin });
+        dispatch(setUser({ token, userId, isAdmin }));
+
+        // Remove any potential direct localStorage calls or useAuth calls
+        // localStorage.setItem("token", token);
+        // localStorage.setItem("user", JSON.stringify({ userId, isAdmin }));
+        // login(token, { userId, isAdmin }); // If useAuth was used
+
+        // Navigate to home or login page after successful registration
+        // Often better to navigate to login page after registration
+        // Or directly to home if registration logs the user in automatically
+        navigate("/"); // Navigate to home page assuming registration logs in
+      }
+    } catch (err) {
+        // Catch unexpected errors during the API call itself
+        console.error("Registration API call failed:", err);
+        setError("An unexpected error occurred during registration.");
     }
   };
 
@@ -44,7 +87,7 @@ const RegisterPage: React.FC = () => {
           </div>
         )}
 
-        {/** Email Field */}
+        {/* Email Field */}
         <div>
           <InputField
             label="Your email"
@@ -57,7 +100,7 @@ const RegisterPage: React.FC = () => {
           />
         </div>
 
-        {/** Password Field */}
+        {/* Password Field */}
         <div>
           <InputField
             label="Password"
@@ -70,7 +113,7 @@ const RegisterPage: React.FC = () => {
           />
         </div>
 
-        {/** Confirm Password Field */}
+        {/* Confirm Password Field */}
         <div>
           <InputField
             label="Confirm password"
@@ -83,7 +126,7 @@ const RegisterPage: React.FC = () => {
           />
         </div>
 
-        {/** Terms */}
+        {/* Terms */}
         <div className="flex items-start">
           <input
             id="terms"
@@ -92,7 +135,7 @@ const RegisterPage: React.FC = () => {
             checked={formData.acceptedTerms}
             onChange={handleChange}
             className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600"
-            required
+            // Removed 'required' from checkbox input itself, validation handled in handleSubmit
           />
           <label htmlFor="terms" className="ml-3 text-sm text-gray-500 dark:text-gray-300">
             I accept the{" "}
@@ -102,14 +145,14 @@ const RegisterPage: React.FC = () => {
           </label>
         </div>
 
-        {/** Submit Button */}
+        {/* Submit Button */}
         <button
           type="submit"
           className="w-full text-white bg-accent hover:bg-primary font-semibold rounded-lg text-lg sm:text-xl px-6 py-4 text-center transition">
           Create an account
         </button>
 
-        {/** Link to Login */}
+        {/* Link to Login */}
         <p className="text-sm font-light text-gray-500 dark:text-gray-400 text-center">
           Already have an account?{" "}
           <Link to="/login" className="font-medium text-accent hover:underline">

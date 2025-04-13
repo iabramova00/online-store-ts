@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useAuth } from "../hooks/useAuth";
 import ProductCard from "../components/ProductCard";
 import PaginationControls from "../components/PaginationControls";
 import SidebarFilter from "../components/SidebarFilter";
@@ -16,8 +15,6 @@ interface Book {
 }
 
 const ProductsPage: React.FC = () => {
-  const { token } = useAuth();
-  //const dispatch = useDispatch();
 
   // Local states for API data
   const [books, setBooks] = useState<Book[]>([]);
@@ -25,6 +22,8 @@ const ProductsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const token = useSelector((state: RootState) => state.user.token);
+
 
   // Get filters from Redux state
   const { searchTerm, selectedCategory, selectedTag, sortBy } = useSelector(
